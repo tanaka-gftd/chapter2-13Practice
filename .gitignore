@@ -1,0 +1,5 @@
+.bsp/
+project/
+target/
+.idea/
+build.sbt
