@@ -1,7 +1,7 @@
 //2-13
 //初級問題 画像で与えられたグラフの最短経路を、ベルマンフォード法で解く
 //中級問題 画像で与えられたグラフの最短経路を、ダイクストラ法で解く  //中級問題 惜しい
-//上級問題 画像で与えられたグラフの最短経路を、ワーシャルフロイド法で解く
+//上級問題 画像で与えられたグラフの最短経路を、ワーシャルフロイド法で解く  //上級問題 難しかった
 
 case class Edge(from: Char, to: Char, distance: Int)
 
@@ -70,6 +70,7 @@ object ShortestPath {
     println(distances)
     println(distances(goal))
   }
+
 
 
   //中級問題 画像で与えられたグラフの最短経路を、ダイクストラ法で解く
@@ -188,5 +189,61 @@ object ShortestPath {
     }
     println(distances)
     println(distances(goal))
+  }
+
+
+
+  //上級問題 画像で与えられたグラフの最短経路を、ワーシャルフロイド法で解く
+  def solveByWarshallFloyd(start: Char, goal: Char): Unit = {
+
+    /*
+      まず、自ノードへの移動コストを0として、自ノードへの移動コストまとめたMapを作る。
+      次に、2つのノード間の距離をまとめたMapを作る(=存在する全ての辺と、その辺の移動コストをまとめたMapを作る)
+      作成した2つのMapを、++メソッドで結合させる
+    */
+    var distanceMap: Map[(Char, Char), Int] = vertexes.map(v => ((v, v) -> 0)).toMap
+    distanceMap = distanceMap ++ edges.map(e => (e.from, e.to) -> e.distance)
+
+    /*
+      引数で渡した2つのノードで作られる辺が、
+      distanceMapに存在すれば、その辺の移動コストを、
+      distanceMapに存在しなければ、Int.MaxValue/2(無限大の代用)を返すような関数を定義する。
+      (Int.MaxValueを使わないのは、Int.MaxValue同士で足し算が起きた場合、Int値がオーバーフローが起きてしまうから)
+      getOrElse()...呼び出し側mapに、第1引数で渡したKeyが存在すればvalueを返し、存在しなければ第2引数で渡した値を返す
+    */
+    def distance(v1: Char, v2: Char): Int = distanceMap.getOrElse((v1, v2), Int.MaxValue / 2)
+
+    /*
+      3重ループ for (v1 <- vertexes; v2 <- vertexes; v3 <- vertexes){処理}
+
+      3重ループのイメージ図
+      for(v1){
+        for(v2){
+          for(v3){
+            処理
+          }
+        }
+      }
+
+      vertexesはRangeオブジェクトなので、for文の条件としてそのまま使用できる。
+      v1,v2,v3の各初期値は'A'で、最大値の'N'までループ。
+      最初は、一番内側のv3の値がAからNへと増えていく
+      (Scalaでは、アルファベットの順番でもfor文の条件として使用できるようだ)
+      v1：中継点ノード
+      v2：始点ノード
+      v3：終点ノード
+    */
+    for (v1 <- vertexes; v2 <- vertexes; v3 <- vertexes) {
+
+      /*
+       「始点ノードから終点ノード」と「始点ノードから中継点ノードを経由して終点ノード」の2つの移動コストを比較して、
+        移動コストが小さい方を2点の最短移動距離としてdistanceMapに記録(更新)する
+      */
+      distanceMap = distanceMap + ((v2, v3) -> math.min(distance(v2, v3), distance(v2, v1) + distance(v1, v3)))
+    }
+
+    //結果をコンソールに表示
+    println(distanceMap)
+    println(distanceMap((start, goal)))
   }
 }
